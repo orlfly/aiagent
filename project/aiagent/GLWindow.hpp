@@ -4,6 +4,7 @@
 #ifndef GLWINDOW_HPP
 #  define GLWINDOW_HPP
 
+#include "BrowserView.hpp"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <string>
@@ -27,7 +28,7 @@ public:
     bool start();
 
 
-    void init();
+    void init(CefMainArgs args,CefRefPtr<BrowserView> browser);
 
     //! \brief Implement the init for your application. Return false in case of failure.
     virtual bool setup() = 0;

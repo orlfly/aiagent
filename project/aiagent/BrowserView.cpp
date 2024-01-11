@@ -39,7 +39,7 @@ bool BrowserView::viewport(float x, float y, float w, float h)
 BrowserView::BrowserView()
   : m_viewport(0.0f, 0.0f, 1.0f, 1.0f)
 {
-
+    m_jsHandler = new JSV8Handler();
 }
 
 //------------------------------------------------------------------------------
@@ -103,7 +103,6 @@ void BrowserView::OnContextInitialized() {
     m_browser = CefBrowserHost::CreateBrowserSync(window_info, m_client.get(),
                                                   url, browserSettings,
                                                   nullptr, nullptr);
-     m_jsHandler = new JSV8Handler();
 
 }
 
@@ -111,8 +110,9 @@ void BrowserView::OnContextCreated(CefRefPtr<CefBrowser> browser,
 				   CefRefPtr<CefFrame> frame,
 				   CefRefPtr<CefV8Context> context) {
 
+  
     CefRefPtr<CefV8Value> object = context->GetGlobal();
-
+    
     CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("testfunc", m_jsHandler);
 
     object->SetValue("testfunc", func, V8_PROPERTY_ATTRIBUTE_NONE);

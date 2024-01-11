@@ -16,7 +16,7 @@ GLWindow::GLWindow(uint32_t const width, uint32_t const height, const char *titl
   : m_width(width), m_height(height), m_title(title)
 {}
 
-void GLWindow::init()
+void GLWindow::init(CefMainArgs args,CefRefPtr<BrowserView> browser)
 {
     // Initialize glfw3
     glfwSetErrorCallback(error_callback);
@@ -30,6 +30,8 @@ void GLWindow::init()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
+    CefExecuteProcess(args, browser , nullptr);
+    
     m_window = glfwCreateWindow(static_cast<int>(m_width),
                                 static_cast<int>(m_height),
                                 m_title.c_str(), nullptr, nullptr);
@@ -39,10 +41,10 @@ void GLWindow::init()
         glfwTerminate();
         exit(1);
     }
-
+    
     glfwMakeContextCurrent(m_window);
 
-
+    
     // Initialize GLEW
     glewExperimental = GL_TRUE; // stops glew crashing on OSX :-/
     if (GLEW_OK != glewInit())
@@ -51,7 +53,22 @@ void GLWindow::init()
         exit(1);
     }
     // create framebuffer object
+    
+    // Configurate Chromium
+    CefSettings settings;
+    settings.windowless_rendering_enabled = true;
+    
+    settings.no_sandbox = false;
+    
+    bool result = CefInitialize(args, settings, browser, nullptr);
+    if (!result)
+    {
+        std::cerr << "CefInitialize: failed" << std::endl;
+        exit(-2);
+    }
+    
 
+    
     glGenFramebuffersEXT(1, &m_fboId);
 
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, m_fboId);

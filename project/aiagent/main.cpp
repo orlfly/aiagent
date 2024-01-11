@@ -1,12 +1,12 @@
 #include "CEFGLWindow.hpp"
 
-#include "common.h"
-#include "llama.h"
+//#include "common.h"
+//#include "llama.h"
 #include <cmath>
 #include <cstdio>
 #include <string>
 #include <vector>
-
+/**
 int llm()
 {
     gpt_params params;
@@ -166,41 +166,26 @@ int llm()
     llama_backend_free();
 
     return 0;
-}
+    } **/
 //------------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-    llm();
+    //llm();
     
     CefMainArgs args(argc, argv);
     
     CEFGLWindow win(1024, 768, "CEF OpenGL");
+
     
     CefRefPtr<BrowserView> browser = win.createBrowser();
+    
+    win.init(args,browser);
 
-    CefExecuteProcess(args, browser , nullptr);
-    
-    win.init();
-
-    // Configurate Chromium
-    CefSettings settings;
-    settings.windowless_rendering_enabled = true;
-    
-    settings.no_sandbox = false;
-    
-    
-    bool result = CefInitialize(args, settings, browser, nullptr);
-    if (!result)
-    {
-        std::cerr << "CefInitialize: failed" << std::endl;
-        exit(-2);
-    }
     
     if (!win.setup()){
         std::cerr << "setup: failed" << std::endl;
         exit(-2);
     }
-
     int res = win.start();
 
     return res;

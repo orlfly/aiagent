@@ -24,12 +24,12 @@ set(AIAGENT_SRCS
   GLWindow.hpp
   WebStream.cpp
   WebStream.hpp
-  common.h
-  common.cpp
-  sampling.h
-  sampling.cpp
-  grammar-parser.h
-  grammar-parser.cpp
+  #  common.h
+  #  common.cpp
+  #  sampling.h
+  #  sampling.cpp
+  #  grammar-parser.h
+  #  grammar-parser.cpp
   main.cpp
   )
 APPEND_PLATFORM_SOURCES(AIAGENT_SRCS)
