@@ -1,17 +1,17 @@
 #include "CEFGLWindow.hpp"
 
-//#include "common.h"
-//#include "llama.h"
+#include "common.h"
+#include "llama.h"
 #include <cmath>
 #include <cstdio>
 #include <string>
 #include <vector>
-/**
+
 int llm()
 {
     gpt_params params;
 
-    params.prompt = "你好";
+    params.prompt = "很久很久以前";
     params.model = "Qwen-1_8B-Chat/ggml-model-q8_0.gguf";
     // total length of the sequence including the prompt
     const int n_len = 32;
@@ -166,11 +166,11 @@ int llm()
     llama_backend_free();
 
     return 0;
-    } **/
+}
 //------------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-    //llm();
+    llm();
     
     CefMainArgs args(argc, argv);
     
