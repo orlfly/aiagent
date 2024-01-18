@@ -15,10 +15,10 @@
 #include "RenderHandler.hpp"
 #include "JSV8Handler.hpp"
 
-#  include <string>
-#  include <vector>
-#  include <memory>
-#  include <algorithm>
+#include <string>
+#include <vector>
+#include <memory>
+#include <algorithm>
 
 // ****************************************************************************
 //! \brief Interface class rendering a single web page.
@@ -30,7 +30,7 @@ class BrowserView:public CefApp,
 public:
 
     //! \brief Default Constructor using a given URL.
-    BrowserView();
+    BrowserView(std::string path);
 
     //! \brief
     ~BrowserView();
@@ -74,6 +74,7 @@ public:
 			  CefRefPtr<CefFrame> frame,
 			  CefRefPtr<CefV8Context> context) override;
 
+    virtual void OnWebKitInitialized();
 private:
 
     //! \brief Where to draw on the OpenGL window
@@ -88,6 +89,8 @@ private:
 
     //! \brief OpenGL has created GPU elements with success
     bool m_initialized = false;
+
+    std::string m_extensionCode;
 
 public:
 

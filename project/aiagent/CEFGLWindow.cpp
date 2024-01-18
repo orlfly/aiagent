@@ -19,9 +19,9 @@ CEFGLWindow::~CEFGLWindow()
 }
 
 //------------------------------------------------------------------------------
-CefRefPtr<BrowserView> CEFGLWindow::createBrowser()
+CefRefPtr<BrowserView> CEFGLWindow::createBrowser(std::string path)
 {
-    CefRefPtr<BrowserView> app = new BrowserView();
+    CefRefPtr<BrowserView> app = new BrowserView(path);
     m_browser=app;
     return app;
 }

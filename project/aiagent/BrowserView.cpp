@@ -5,6 +5,29 @@
 #include "BrowserView.hpp"
 #include "GLCore.hpp"
 #include "include/wrapper/cef_helpers.h"
+#include <fstream>
+
+std::string FileToString(std::string wp, std::string path) {
+    std::ifstream inputFile(wp+path);
+    if (!inputFile.is_open()) {
+        std::cerr << "Error opening the file!" << std::endl;
+        return ""; // Exit with an error code
+    }
+    
+    std::ostringstream ss;
+    std::string fileContent;
+    std::string line;
+
+    while (std::getline(inputFile, line)) {
+        ss << line << "\n";
+    }
+
+    std::string file_contents = ss.str();
+    inputFile.close();
+
+    return file_contents;
+}
+
 
 bool BrowserView::viewport(float x, float y, float w, float h)
 {
@@ -36,10 +59,11 @@ bool BrowserView::viewport(float x, float y, float w, float h)
 
 
 //------------------------------------------------------------------------------
-BrowserView::BrowserView()
-  : m_viewport(0.0f, 0.0f, 1.0f, 1.0f)
+BrowserView::BrowserView(std::string path)
+  : m_viewport(0.0f, 0.0f, 1.0f, 1.0f), m_extensionCode("")
 {
     m_jsHandler = new JSV8Handler();
+    m_extensionCode = FileToString(path, "script/aiagent.js");
 }
 
 //------------------------------------------------------------------------------
@@ -116,4 +140,11 @@ void BrowserView::OnContextCreated(CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("testfunc", m_jsHandler);
 
     object->SetValue("testfunc", func, V8_PROPERTY_ATTRIBUTE_NONE);
+}
+
+void BrowserView::OnWebKitInitialized() {
+    // Register the extension.
+    if(m_extensionCode.length()>0){
+        CefRegisterExtension("v8/ai", m_extensionCode, nullptr);
+    }
 }

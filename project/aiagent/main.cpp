@@ -6,6 +6,10 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <filesystem>
+#include <sstream>
+
+using std::filesystem::current_path;
 
 int llm()
 {
@@ -170,14 +174,19 @@ int llm()
 //------------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-    llm();
+    //llm();
+
+    
     
     CefMainArgs args(argc, argv);
     
     CEFGLWindow win(1024, 768, "CEF OpenGL");
 
+    std::stringstream fpss;
+
+    fpss << get_current_dir_name() << "/";
     
-    CefRefPtr<BrowserView> browser = win.createBrowser();
+    CefRefPtr<BrowserView> browser = win.createBrowser(fpss.str());
     
     win.init(args,browser);
 
