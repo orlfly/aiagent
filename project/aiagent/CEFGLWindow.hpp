@@ -17,7 +17,7 @@ class CEFGLWindow: public GLWindow
 public:
 
     //! \brief Default construction: define the window dimension and title
-    CEFGLWindow(uint32_t const width, uint32_t const height, const char *title);
+    CEFGLWindow(uint32_t const width, uint32_t const height, float const scale,const char *title);
 
     //! \brief Destructor
     ~CEFGLWindow();
@@ -33,6 +33,7 @@ private:
 
     //! \brief List of BrowserView managed by createBrowser() and
     CefRefPtr<BrowserView> m_browser;
+    float m_scale;
 };
 
 #endif // CEFGLWINDOW_HPP

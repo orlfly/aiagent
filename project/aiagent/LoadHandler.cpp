@@ -13,15 +13,8 @@ LoadHandler::~LoadHandler()
 void LoadHandler::OnLoadEnd( CefRefPtr< CefBrowser > browser,
 			     CefRefPtr< CefFrame > frame, int httpStatusCode )
 {
-    std::string cmd = "var iterator = document.createNodeIterator(document,NodeFilter.SHOW_ELEMENT,null,false)\n"
-        "var node = iterator.nextNode()\n"
-        "while(node !== null) {\n"
-        "  console.log(node.tagName)\n"
-        "  node = iterator.nextNode()\n"
-        "}\n"
-        "var testval=window.testfunc()\n"
-        "console.log(aiagent.query('#kw'))\n"
-        "console.log(testval)\n";
+    std::string cmd = "aiagent.visualBox()\n"
+        "console.log('end')\n";
     frame->ExecuteJavaScript(cmd, frame->GetURL(), 0);
 }
 

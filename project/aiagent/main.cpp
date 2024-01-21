@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
     
     CefMainArgs args(argc, argv);
     
-    CEFGLWindow win(1024, 768, "CEF OpenGL");
+    CEFGLWindow win(960, 540, 2, "CEF OpenGL");
 
     std::stringstream fpss;
 

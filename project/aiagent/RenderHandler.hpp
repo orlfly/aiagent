@@ -20,7 +20,7 @@ class RenderHandler: public CefRenderHandler
 {
 public:
 
-  RenderHandler(glm::vec4 const& viewport);
+  RenderHandler(glm::vec4 const& viewport,float scale);
 
   //! \brief
   ~RenderHandler();
@@ -61,6 +61,7 @@ private:
 
   //! \brief Where to draw on the OpenGL window
   glm::vec4 const& m_viewport;
+  float m_scale;
 
   //! \brief OpenGL shader program handle
   GLuint m_prog = 0;

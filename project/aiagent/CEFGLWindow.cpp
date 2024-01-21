@@ -6,8 +6,8 @@
 #include <string>
 
 //------------------------------------------------------------------------------
-CEFGLWindow::CEFGLWindow(uint32_t const width, uint32_t const height, const char *title)
-    : GLWindow(width, height, title)
+CEFGLWindow::CEFGLWindow(uint32_t const width, uint32_t const height, float const scale, const char *title)
+    : GLWindow(width, height, title), m_scale(scale)
 {
     std::cout << __PRETTY_FUNCTION__ << std::endl;
 }
@@ -21,7 +21,7 @@ CEFGLWindow::~CEFGLWindow()
 //------------------------------------------------------------------------------
 CefRefPtr<BrowserView> CEFGLWindow::createBrowser(std::string path)
 {
-    CefRefPtr<BrowserView> app = new BrowserView(path);
+  CefRefPtr<BrowserView> app = new BrowserView(path,m_scale);
     m_browser=app;
     return app;
 }
@@ -30,8 +30,7 @@ CefRefPtr<BrowserView> CEFGLWindow::createBrowser(std::string path)
 //------------------------------------------------------------------------------
 bool CEFGLWindow::setup()
 {
-    
-    m_browser->reshape(m_width, m_height);
+    m_browser->reshape(static_cast<uint32_t>(m_width*m_scale), static_cast<uint32_t>(m_height*m_scale));
 
     // Change viewports (vertical split)
     m_browser->viewport(0.0f, 0.0f, 1.0f, 1.0f);

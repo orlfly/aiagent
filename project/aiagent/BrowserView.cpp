@@ -59,8 +59,8 @@ bool BrowserView::viewport(float x, float y, float w, float h)
 
 
 //------------------------------------------------------------------------------
-BrowserView::BrowserView(std::string path)
-  : m_viewport(0.0f, 0.0f, 1.0f, 1.0f), m_extensionCode("")
+BrowserView::BrowserView(std::string path,float scale)
+  : m_viewport(0.0f, 0.0f, 1.0f, 1.0f), m_scale(scale), m_extensionCode("")
 {
     m_jsHandler = new JSV8Handler();
     m_extensionCode = FileToString(path, "script/aiagent.js");
@@ -106,7 +106,7 @@ void BrowserView::OnContextInitialized() {
     CefWindowInfo window_info;
     window_info.SetAsWindowless(0);
 
-    m_render_handler = new RenderHandler(m_viewport);
+    m_render_handler = new RenderHandler(m_viewport,m_scale);
     m_initialized = m_render_handler->init();
     m_render_handler->reshape(128, 128); // initial size
 
@@ -137,9 +137,9 @@ void BrowserView::OnContextCreated(CefRefPtr<CefBrowser> browser,
   
     CefRefPtr<CefV8Value> object = context->GetGlobal();
     
-    CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("testfunc", m_jsHandler);
+    CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("aiprint", m_jsHandler);
 
-    object->SetValue("testfunc", func, V8_PROPERTY_ATTRIBUTE_NONE);
+    object->SetValue("aiprint", func, V8_PROPERTY_ATTRIBUTE_NONE);
 }
 
 void BrowserView::OnWebKitInitialized() {

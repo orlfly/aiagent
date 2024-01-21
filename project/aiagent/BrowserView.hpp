@@ -30,7 +30,7 @@ class BrowserView:public CefApp,
 public:
 
     //! \brief Default Constructor using a given URL.
-    BrowserView(std::string path);
+  BrowserView(std::string path,float scale);
 
     //! \brief
     ~BrowserView();
@@ -79,6 +79,7 @@ private:
 
     //! \brief Where to draw on the OpenGL window
     glm::vec4 m_viewport;
+    float m_scale;
 
     //! \brief Chromium Embedded framework elements
     CefRefPtr<CefBrowser> m_browser;

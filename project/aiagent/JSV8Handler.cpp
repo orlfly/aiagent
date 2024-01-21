@@ -1,4 +1,5 @@
 #include "JSV8Handler.hpp"
+#include <iostream>
 
 bool JSV8Handler::Execute(const CefString& name,
 			  CefRefPtr<CefV8Value> object,
@@ -6,8 +7,11 @@ bool JSV8Handler::Execute(const CefString& name,
 			  CefRefPtr<CefV8Value>& retval,
 			  CefString& exception)
 {
-    if (name == "testfunc") {
-        retval = CefV8Value::CreateString("test!!!!");
+    if (name == "aiprint") {
+        for (CefV8ValueList::const_iterator it = arguments.begin(); it != arguments.end(); ++it) {
+	    CefRefPtr<CefV8Value> v8Value = *it;
+	    std::cout << v8Value; 
+	}
 	return true;
     }
     return false;

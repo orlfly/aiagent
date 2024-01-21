@@ -2,8 +2,8 @@
 #include "GLCore.hpp"
 
 //------------------------------------------------------------------------------
-RenderHandler::RenderHandler(glm::vec4 const& viewport)
-    : m_viewport(viewport)
+RenderHandler::RenderHandler(glm::vec4 const& viewport, float scale)
+  : m_viewport(viewport), m_scale(scale)
 {}
 
 //------------------------------------------------------------------------------
@@ -77,7 +77,8 @@ void RenderHandler::draw(glm::vec4 const& viewport)
 
     // Apply a rotation
     glm::mat4 trans = glm::mat4(1.0f); // Identity matrix
-
+    trans = glm::translate(trans, glm::vec3(-1.0f+1.0f/m_scale, -1.0f+1.0f/m_scale, 0.0f));
+    trans = glm::scale(trans, glm::vec3(1.0f/m_scale, 1.0f/m_scale, 0.0f));
     // See https://learnopengl.com/Getting-started/Textures
     GLCHECK(glUseProgram(m_prog));
     GLCHECK(glBindVertexArray(m_vao));
