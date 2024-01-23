@@ -9,6 +9,7 @@
 set(AIAGENT_SRCS
   BrowserView.cpp
   BrowserView.hpp
+  BrowserClient.cpp
   BrowserClient.hpp
   LoadHandler.cpp 
   LoadHandler.hpp  
@@ -24,12 +25,8 @@ set(AIAGENT_SRCS
   GLWindow.hpp
   WebStream.cpp
   WebStream.hpp
-  common.h
-  common.cpp
-  sampling.h
-  sampling.cpp
-  grammar-parser.h
-  grammar-parser.cpp
+  openai.hpp
+  json.hpp
   main.cpp
   )
 APPEND_PLATFORM_SOURCES(AIAGENT_SRCS)

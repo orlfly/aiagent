@@ -1,17 +1,24 @@
 #include "JSV8Handler.hpp"
 #include <iostream>
+#include "openai.hpp"
 
+JSV8Handler::JSV8Handler(CefRefPtr<CefBrowser> browser) {
+    m_browser = browser;
+}
 bool JSV8Handler::Execute(const CefString& name,
 			  CefRefPtr<CefV8Value> object,
 			  const CefV8ValueList& arguments,
 			  CefRefPtr<CefV8Value>& retval,
 			  CefString& exception)
 {
-    if (name == "aiprint") {
-        for (CefV8ValueList::const_iterator it = arguments.begin(); it != arguments.end(); ++it) {
-	    CefRefPtr<CefV8Value> v8Value = *it;
-	    std::cout << v8Value; 
-	}
+    if (name == "scriptGen") {
+
+        CefRefPtr<CefV8Context> context = CefV8Context::GetCurrentContext();
+	CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("JSV8handler");
+	CefRefPtr<CefListValue> args = msg->GetArgumentList();
+	args->SetString(0, arguments[0]->GetStringValue());
+
+	context->GetFrame()->SendProcessMessage(PID_BROWSER, msg);
 	return true;
     }
     return false;

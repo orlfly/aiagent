@@ -27,8 +27,8 @@ public:
     //! loop. Return false in case of failure.
     bool start();
 
-
-    void init(CefMainArgs args,CefRefPtr<BrowserView> browser);
+    virtual CefRefPtr<BrowserView> createBrowser(std::string path) = 0;
+    void init(CefMainArgs args,std::string path);
 
     //! \brief Implement the init for your application. Return false in case of failure.
     virtual bool setup() = 0;

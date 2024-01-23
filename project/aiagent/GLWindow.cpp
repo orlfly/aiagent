@@ -16,7 +16,7 @@ GLWindow::GLWindow(uint32_t const width, uint32_t const height, const char *titl
   : m_width(width), m_height(height), m_title(title)
 {}
 
-void GLWindow::init(CefMainArgs args,CefRefPtr<BrowserView> browser)
+void GLWindow::init(CefMainArgs args,std::string path)
 {
     // Initialize glfw3
     glfwSetErrorCallback(error_callback);
@@ -30,6 +30,8 @@ void GLWindow::init(CefMainArgs args,CefRefPtr<BrowserView> browser)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
+    CefRefPtr<BrowserView> browser = createBrowser(path);
+    
     CefExecuteProcess(args, browser , nullptr);
     
     m_window = glfwCreateWindow(static_cast<int>(m_width),
@@ -59,6 +61,7 @@ void GLWindow::init(CefMainArgs args,CefRefPtr<BrowserView> browser)
     settings.windowless_rendering_enabled = true;
     
     settings.no_sandbox = false;
+
     
     bool result = CefInitialize(args, settings, browser, nullptr);
     if (!result)

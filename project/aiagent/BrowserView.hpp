@@ -75,6 +75,11 @@ public:
 			  CefRefPtr<CefV8Context> context) override;
 
     virtual void OnWebKitInitialized();
+
+    virtual bool OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
+					   CefRefPtr< CefFrame > frame,
+					   CefProcessId source_process,
+					   CefRefPtr< CefProcessMessage > message ) override;
 private:
 
     //! \brief Where to draw on the OpenGL window

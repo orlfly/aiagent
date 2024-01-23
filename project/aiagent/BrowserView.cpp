@@ -62,7 +62,6 @@ bool BrowserView::viewport(float x, float y, float w, float h)
 BrowserView::BrowserView(std::string path,float scale)
   : m_viewport(0.0f, 0.0f, 1.0f, 1.0f), m_scale(scale), m_extensionCode("")
 {
-    m_jsHandler = new JSV8Handler();
     m_extensionCode = FileToString(path, "script/aiagent.js");
 }
 
@@ -116,7 +115,7 @@ void BrowserView::OnContextInitialized() {
     browserSettings.windowless_frame_rate = 60; // 30 is default
 
     m_client = new BrowserClient(m_render_handler, m_load_handler);
-
+    
     CefRefPtr<CefCommandLine> command_line =
         CefCommandLine::GetGlobalCommandLine();
     
@@ -124,6 +123,7 @@ void BrowserView::OnContextInitialized() {
     if (url.empty()) {
         url = "http://www.baidu.com";
     }
+    
     m_browser = CefBrowserHost::CreateBrowserSync(window_info, m_client.get(),
                                                   url, browserSettings,
                                                   nullptr, nullptr);
@@ -136,10 +136,14 @@ void BrowserView::OnContextCreated(CefRefPtr<CefBrowser> browser,
 
   
     CefRefPtr<CefV8Value> object = context->GetGlobal();
-    
-    CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("aiprint", m_jsHandler);
 
-    object->SetValue("aiprint", func, V8_PROPERTY_ATTRIBUTE_NONE);
+    if(m_jsHandler==nullptr){
+        m_jsHandler = new JSV8Handler(m_browser);
+    }
+    
+    CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("scriptGen", m_jsHandler);
+
+    object->SetValue("scriptGen", func, V8_PROPERTY_ATTRIBUTE_NONE);
 }
 
 void BrowserView::OnWebKitInitialized() {
@@ -147,4 +151,13 @@ void BrowserView::OnWebKitInitialized() {
     if(m_extensionCode.length()>0){
         CefRegisterExtension("v8/ai", m_extensionCode, nullptr);
     }
+}
+
+bool BrowserView::OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
+					    CefRefPtr< CefFrame > frame,
+					    CefProcessId source_process,
+					    CefRefPtr< CefProcessMessage > message )
+{
+    std::cout<<"+++++++++++++++++++++++++++++++++++1"<<std::endl;
+    return true;
 }

@@ -5,9 +5,10 @@
 #include <iostream>
 
 class JSV8Handler : public CefV8Handler {
+private:
+    CefRefPtr<CefBrowser> m_browser;
 public:
-    JSV8Handler() {}
-      
+    JSV8Handler(CefRefPtr<CefBrowser> browser);      
     virtual bool Execute(const CefString& name,
 			 CefRefPtr<CefV8Value> object,
 			 const CefV8ValueList& arguments,
