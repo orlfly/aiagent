@@ -26,6 +26,7 @@ set(AIAGENT_SRCS
   WebStream.cpp
   WebStream.hpp
   openai.hpp
+  openai.cpp
   json.hpp
   main.cpp
   )

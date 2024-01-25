@@ -22,8 +22,10 @@ public:
 					   CefRefPtr< CefFrame > frame,
 					   CefProcessId source_process,
 					   CefRefPtr< CefProcessMessage > message ) override;
+
     CefRefPtr<CefRenderHandler> m_renderHandler;
     CefRefPtr<CefLoadHandler> m_loadHandler;
+    CefRefPtr<OpenAI> m_openai;
 
     IMPLEMENT_REFCOUNTING(BrowserClient);
 };

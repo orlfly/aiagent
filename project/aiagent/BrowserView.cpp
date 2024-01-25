@@ -158,6 +158,9 @@ bool BrowserView::OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
 					    CefProcessId source_process,
 					    CefRefPtr< CefProcessMessage > message )
 {
+    CefRefPtr<CefListValue> args = message->GetArgumentList();
+    std::cout<< args->GetString(0) <<std::endl;
+    frame->ExecuteJavaScript(args->GetString(0), frame->GetURL(), 0);
     std::cout<<"+++++++++++++++++++++++++++++++++++1"<<std::endl;
     return true;
 }

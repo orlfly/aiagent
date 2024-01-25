@@ -214,7 +214,6 @@ if(OS_LINUX)
     swscale
     avutil
     x264
-    llama
     )
 
   # CEF directory paths.
@@ -248,7 +247,7 @@ if(OS_LINUX)
     icudtl.dat
     locales
     shaders
-    Qwen-1_8B-Chat
+    script
     )
 
   if(USE_SANDBOX)

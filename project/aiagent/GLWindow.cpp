@@ -60,7 +60,7 @@ void GLWindow::init(CefMainArgs args,std::string path)
     CefSettings settings;
     settings.windowless_rendering_enabled = true;
     
-    settings.no_sandbox = false;
+    settings.no_sandbox = true;
 
     
     bool result = CefInitialize(args, settings, browser, nullptr);
@@ -69,8 +69,6 @@ void GLWindow::init(CefMainArgs args,std::string path)
         std::cerr << "CefInitialize: failed" << std::endl;
         exit(-2);
     }
-    
-
     
     glGenFramebuffersEXT(1, &m_fboId);
 
