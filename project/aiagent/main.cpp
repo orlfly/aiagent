@@ -4,10 +4,8 @@
 #include <cstdio>
 #include <string>
 #include <vector>
-#include <filesystem>
 #include <sstream>
 
-using std::filesystem::current_path;
 
 //------------------------------------------------------------------------------
 int main(int argc, char *argv[])
@@ -16,11 +14,7 @@ int main(int argc, char *argv[])
     
     CEFGLWindow win(960, 540, 2, "CEF OpenGL");
 
-    std::stringstream fpss;
-
-    fpss << get_current_dir_name() << "/";
-    
-    win.init(args,fpss.str());
+    win.init(args);
 
     if (!win.setup()){
         std::cerr << "setup: failed" << std::endl;

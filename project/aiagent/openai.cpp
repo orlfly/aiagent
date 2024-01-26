@@ -1,7 +1,9 @@
 #include "openai.hpp"
+#include <ctemplate/template.h>
+#include "util.h"
 
-OpenAI::OpenAI(std::string baseUrl,std::string token,std::string version)
-  :mBaseUrl(baseUrl),mToken(token),mVersion(version)
+OpenAI::OpenAI(std::string baseUrl, std::string token, std::string model, std::string version)
+  :mBaseUrl(baseUrl),mToken(token),mModel(model),mVersion(version)
 {
 }
 
@@ -21,7 +23,12 @@ void OpenAI::OnRequestComplete(CefRefPtr<CefURLRequest> request){
 	    std::cout<< response->GetStatusText() << ":" << response->GetStatus() << std::endl;
 	    if(mFrame != nullptr)
 	    {
+
 		json jresponse = json::parse(download_data_.str());
+		// clear download_data_ for next request
+		download_data_.str("");
+		download_data_.clear();
+
 		std::string jscode = jresponse["choices"][0]["message"]["content"].get<std::string>();
 		CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("JSCode");
 		CefRefPtr<CefListValue> args = msg->GetArgumentList();
@@ -57,11 +64,41 @@ bool OpenAI::GetAuthCredentials(bool isProxy,
     return false;  
 }
 
-void OpenAI::completionAzure(const json &data){
-
-    std::string model_name = data["model"].get<std::string>();
-    std::string url = mBaseUrl+model_name+"/chat/completions?api-version="+mVersion;
-    std::cout << url << std::endl;
+void OpenAI::completionAzure(std::string prompt){
+    json data;
+    data["prompt"] = prompt;
+    data["max_tokens"] = 2000;
+    data["temperature"] = 0;
+    requestAzure("/completions", data);
+}
+void OpenAI::completion(std::string prompt){
+    json data;
+    data["model"] = mModel;
+    data["prompt"] = prompt;
+    data["max_tokens"] = 2000;
+    data["temperature"] = 0;
+    request("/completions", data);
+}
+void OpenAI::chatCompletionAzure(std::string prompt){
+    json data;
+    data["messages"][0]["role"] = "user";
+    data["messages"][0]["content"] = prompt;
+    data["max_tokens"] = 2000;
+    data["temperature"] = 0;
+    requestAzure("/chat/completions", data);
+}
+void OpenAI::chatCompletion(std::string prompt){
+    json data;
+    data["model"] = mModel;
+    data["messages"][0]["role"] = "user";
+    data["messages"][0]["content"] = prompt;
+    data["max_tokens"] = 2000;
+    data["temperature"] = 0;
+    request("/chat/completions", data);
+}
+void OpenAI::requestAzure(std::string function, const json &data){
+  
+    std::string url = mBaseUrl+mModel+function+"?api-version="+mVersion;
     
     // Create a CefRequest object.
     CefRefPtr<CefRequest> request = CefRequest::Create();
@@ -84,10 +121,8 @@ void OpenAI::completionAzure(const json &data){
 
     CefRefPtr<CefURLRequest> url_request = CefURLRequest::Create(request, this, nullptr);
 }
-void  OpenAI::completion(const json &data){
-
-    
-    std::string url = mBaseUrl+mVersion+"/"+"chat/completions";
+void  OpenAI::request(std::string function, const json &data){
+    std::string url = mBaseUrl+mVersion+function;
     std::cout << url << std::endl;
     // Create a CefRequest object.
     CefRefPtr<CefRequest> request = CefRequest::Create();
@@ -110,4 +145,15 @@ void  OpenAI::completion(const json &data){
 
     CefRefPtr<CefURLRequest> url_request = CefURLRequest::Create(request, this, nullptr);
 }
-
+std::string OpenAI::prompt_template(std::string temp, const json &dict)
+{
+    std::string epath;
+    bool success = GetResourceDir(epath);
+    std::string prompt;
+    if(success){
+        ctemplate::TemplateDictionary params("params");
+        params.SetValue("context", dict["context"].get<std::string>());
+        ctemplate::ExpandTemplate(epath+"template/"+temp, ctemplate::DO_NOT_STRIP, &params, &prompt);
+    }
+    return prompt;
+}

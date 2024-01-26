@@ -6,12 +6,17 @@
 using json = nlohmann::json;
 
 BrowserClient::BrowserClient(CefRefPtr<CefRenderHandler> ptr,
-	      CefRefPtr<CefLoadHandler> loadptr)
-    : m_renderHandler(ptr),
-    m_loadHandler(loadptr)
+			     CefRefPtr<CefLoadHandler> loadptr,
+			     CefRefPtr<CefDisplayHandler> displayptr)
+  : m_renderHandler(ptr),
+    m_loadHandler(loadptr),
+    m_displayHandler(displayptr)
 {
-    m_openai = new OpenAI("http://192.168.8.37:8000/", "EMPTY", "v1");
-    //m_openai = new OpenAI("https://kingsware3.openai.azure.com/openai/deployments/", "3d93f1f773414565813b79e1767000ef", "2023-07-01-preview");
+    //m_openai = new OpenAI("http://192.168.8.37:8000/", "EMPTY", "Qwen-14B-Chat","v1");
+    m_openai = new OpenAI("https://kingsware3.openai.azure.com/openai/deployments/",
+			  "3d93f1f773414565813b79e1767000ef",
+			  "kingsgpt35_16k",
+			  "2023-07-01-preview");
 }
 CefRefPtr<CefRenderHandler> BrowserClient::GetRenderHandler()
 {
@@ -21,19 +26,14 @@ CefRefPtr<CefLoadHandler> BrowserClient::GetLoadHandler()
 {
     return m_loadHandler;
 }
-bool BrowserClient::OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
-					      CefRefPtr< CefFrame > frame,
-					      CefProcessId source_process,
-					      CefRefPtr< CefProcessMessage > message )
+CefRefPtr<CefDisplayHandler> BrowserClient::GetDisplayHandler()
 {
-    CefRefPtr<CefListValue> args = message->GetArgumentList();
-
-    json eleArr = json::parse(args->GetString(0).ToString());
-    
+    return m_displayHandler;
+}
+std::string BrowserClient::CalEleDesc(json &data){
     std::stringstream ssprompt;
 
-    ssprompt << "下面是HTML的页面元素信息：" <<std::endl;
-    for(json::iterator it = eleArr.begin(); it != eleArr.end(); ++it)
+    for(json::iterator it = data.begin(); it != data.end(); ++it)
     {
         std::string tag = (*it)["tag"].template get<std::string>();
 	std::string Xpath = (*it)["xpath"].template get<std::string>();
@@ -47,25 +47,29 @@ bool BrowserClient::OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
         ssprompt << "HTML标签:'" << tag <<"' ";
         ssprompt << "Xpath:'" << Xpath <<"' ";
 	if (text.length() > 0)
-	  ssprompt << "文本信息:'" << text <<"' ";
+	    ssprompt << "文本信息:'" << text <<"' ";
 	else if(value.length()>0)
-	  ssprompt << "文本信息:'" << value <<"' ";
+	    ssprompt << "文本信息:'" << value <<"' ";
         ssprompt << std::endl;
     }
-    ssprompt << "基于HTML的页面元素信息生成搜索'淘宝'的javascript页面操作脚本。仅输出javascript脚本,去除备注和注释信息。" <<std::endl;
-    
-    json data;
-    data["model"] = "Qwen-14B-Chat";
-    //data["model"] = "kingsgpt35_16k";
-    data["messages"][0]["role"] = "user";
-    data["messages"][0]["content"] = ssprompt.str();
-    data["max_tokens"] = 2000;
-    data["temperature"] = 0;
+    return ssprompt.str();
+}
+bool BrowserClient::OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
+					      CefRefPtr< CefFrame > frame,
+					      CefProcessId source_process,
+					      CefRefPtr< CefProcessMessage > message )
+{
+    CefRefPtr<CefListValue> args = message->GetArgumentList();
 
-    std::cout << data.dump() << std::endl;
+    json eleArr = json::parse(args->GetString(0).ToString());
+
+    json dict;
+    dict["context"] = CalEleDesc(eleArr);
+
+    std::string prompt = m_openai->prompt_template("script.prom",dict);
     
     m_openai->setFrame(frame);
-    m_openai->completion(data);
-    //m_openai->completionAzure(data);
+    //m_openai->chatCompletion(prompt);
+    m_openai->chatCompletionAzure(prompt);
     return true;
 }

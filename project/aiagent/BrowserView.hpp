@@ -14,6 +14,7 @@
 #include "LoadHandler.hpp"
 #include "RenderHandler.hpp"
 #include "JSV8Handler.hpp"
+#include "DisplayHandler.hpp"
 
 #include <string>
 #include <vector>
@@ -30,7 +31,7 @@ class BrowserView:public CefApp,
 public:
 
     //! \brief Default Constructor using a given URL.
-  BrowserView(std::string path,float scale);
+    BrowserView(float scale);
 
     //! \brief
     ~BrowserView();
@@ -91,6 +92,7 @@ private:
     CefRefPtr<BrowserClient> m_client;
     CefRefPtr<RenderHandler> m_render_handler = nullptr;
     CefRefPtr<LoadHandler> m_load_handler = nullptr;
+    CefRefPtr<DisplayHandler> m_display_handler = nullptr;
     CefRefPtr<JSV8Handler> m_jsHandler = nullptr;
 
     //! \brief OpenGL has created GPU elements with success

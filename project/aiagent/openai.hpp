@@ -39,10 +39,18 @@ using json = nlohmann::json;
 class OpenAI :public CefURLRequestClient
 {
 public:
-    OpenAI(std::string baseUrl,std::string token,std::string version);
+  OpenAI(std::string baseUrl,std::string token, std::string model, std::string version);
     void setFrame(CefRefPtr<CefFrame> frame){ mFrame=frame; }
-    void completion(const json &data);
-    void completionAzure(const json &data);
+    //openai completion api
+    void completion(std::string prompt);
+    void completionAzure(std::string prompt);
+    void chatCompletion(std::string prompt);
+    void chatCompletionAzure(std::string prompt);
+    void request(std::string function, const json &data);
+    void requestAzure(std::string function, const json &data);
+    //prompt template api
+    std::string prompt_template(std::string temp, const json &dict);
+    
     void OnRequestComplete(CefRefPtr<CefURLRequest> request) override;
     void OnUploadProgress(CefRefPtr<CefURLRequest> request,
 			  int64_t current,
@@ -67,6 +75,7 @@ private:
     CefRefPtr<CefFrame> mFrame=nullptr;
     std::string mBaseUrl;
     std::string mToken;
+    std::string mModel;
     std::string mVersion;
     int64_t upload_total_;
     int64_t download_total_;

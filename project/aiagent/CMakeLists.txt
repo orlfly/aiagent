@@ -13,6 +13,8 @@ set(AIAGENT_SRCS
   BrowserClient.hpp
   LoadHandler.cpp 
   LoadHandler.hpp  
+  DisplayHandler.cpp 
+  DisplayHandler.hpp  
   RenderHandler.cpp  
   RenderHandler.hpp
   JSV8Handler.cpp  
@@ -27,6 +29,8 @@ set(AIAGENT_SRCS
   WebStream.hpp
   openai.hpp
   openai.cpp
+  util.h
+  util.cpp
   json.hpp
   main.cpp
   )

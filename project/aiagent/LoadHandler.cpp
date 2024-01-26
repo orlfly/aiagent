@@ -13,9 +13,7 @@ LoadHandler::~LoadHandler()
 void LoadHandler::OnLoadEnd( CefRefPtr< CefBrowser > browser,
 			     CefRefPtr< CefFrame > frame, int httpStatusCode )
 {
-    std::string cmd = "aiagent.visualBox()\n"
-        "console.log('end')\n";
-    frame->ExecuteJavaScript(cmd, frame->GetURL(), 0);
+    
 }
 
 //------------------------------------------------------------------------------

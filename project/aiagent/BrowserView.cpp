@@ -5,6 +5,7 @@
 #include "BrowserView.hpp"
 #include "GLCore.hpp"
 #include "include/wrapper/cef_helpers.h"
+#include "util.h"
 #include <fstream>
 
 std::string FileToString(std::string wp, std::string path) {
@@ -59,10 +60,14 @@ bool BrowserView::viewport(float x, float y, float w, float h)
 
 
 //------------------------------------------------------------------------------
-BrowserView::BrowserView(std::string path,float scale)
+BrowserView::BrowserView(float scale)
   : m_viewport(0.0f, 0.0f, 1.0f, 1.0f), m_scale(scale), m_extensionCode("")
 {
-    m_extensionCode = FileToString(path, "script/aiagent.js");
+  std::string epath;
+  bool sucess = GetResourceDir(epath);
+  if(sucess){
+    m_extensionCode = FileToString(epath, "script/aiagent.js");
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -110,11 +115,13 @@ void BrowserView::OnContextInitialized() {
     m_render_handler->reshape(128, 128); // initial size
 
     m_load_handler = new LoadHandler();
+
+    m_display_handler = new DisplayHandler();
     
     CefBrowserSettings browserSettings;
     browserSettings.windowless_frame_rate = 60; // 30 is default
 
-    m_client = new BrowserClient(m_render_handler, m_load_handler);
+    m_client = new BrowserClient(m_render_handler, m_load_handler, m_display_handler);
     
     CefRefPtr<CefCommandLine> command_line =
         CefCommandLine::GetGlobalCommandLine();

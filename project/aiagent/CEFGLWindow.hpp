@@ -22,7 +22,7 @@ public:
     //! \brief Destructor
     ~CEFGLWindow();
 
-    CefRefPtr<BrowserView> createBrowser(std::string path);
+    CefRefPtr<BrowserView> createBrowser();
 
     virtual bool setup() override;
 

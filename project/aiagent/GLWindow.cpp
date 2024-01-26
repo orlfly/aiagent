@@ -16,7 +16,7 @@ GLWindow::GLWindow(uint32_t const width, uint32_t const height, const char *titl
   : m_width(width), m_height(height), m_title(title)
 {}
 
-void GLWindow::init(CefMainArgs args,std::string path)
+void GLWindow::init(CefMainArgs args)
 {
     // Initialize glfw3
     glfwSetErrorCallback(error_callback);
@@ -30,7 +30,7 @@ void GLWindow::init(CefMainArgs args,std::string path)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
-    CefRefPtr<BrowserView> browser = createBrowser(path);
+    CefRefPtr<BrowserView> browser = createBrowser();
     
     CefExecuteProcess(args, browser , nullptr);
     
