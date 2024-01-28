@@ -16,23 +16,28 @@ class BrowserClient: public CefClient
 {
 public:
 
-    BrowserClient(CefRefPtr<CefRenderHandler> ptr,
+    BrowserClient(CefRefPtr<OpenAI> openai,
+		  CefRefPtr<CefRenderHandler> ptr,
 		  CefRefPtr<CefLoadHandler> loadptr,
-		  CefRefPtr<CefDisplayHandler> displayptr);
+		  CefRefPtr<CefDisplayHandler> displayptr,
+		  CefRefPtr<CefLifeSpanHandler> lifespanptr);
     virtual CefRefPtr<CefRenderHandler> GetRenderHandler() override;
     virtual CefRefPtr<CefLoadHandler> GetLoadHandler() override;
     virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() override;
-    virtual bool OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
-					   CefRefPtr< CefFrame > frame,
+    virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override;
+    virtual bool OnProcessMessageReceived( CefRefPtr<CefBrowser> browser,
+					   CefRefPtr<CefFrame> frame,
 					   CefProcessId source_process,
 					   CefRefPtr< CefProcessMessage > message ) override;
+    void ScriptCompletionCallback(CefRefPtr<CefBrowser> browser, const json& msg);
 private:
     std::string CalEleDesc(json &data);
-
+    CefRefPtr<OpenAI> m_openai;
     CefRefPtr<CefRenderHandler> m_renderHandler;
     CefRefPtr<CefLoadHandler> m_loadHandler;
     CefRefPtr<CefDisplayHandler> m_displayHandler;
-    CefRefPtr<OpenAI> m_openai;
+    CefRefPtr<CefLifeSpanHandler> m_lifeSpanHandler;
+
 
     IMPLEMENT_REFCOUNTING(BrowserClient);
 };

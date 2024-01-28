@@ -14,8 +14,7 @@ void DisplayHandler::OnLoadingProgressChange( CefRefPtr< CefBrowser > browser, d
 {
     if( (1.0f-m_progress) > 0.00001f && (1.0f-progress) < 0.00001f)
     {
-	std::string cmd = "aiagent.visualBox()\n"
-	  "console.log('end')\n";
+        std::string cmd = "aiagent.visualBox();";
 	browser->GetMainFrame()->ExecuteJavaScript(cmd, browser->GetMainFrame()->GetURL(), 0);
     }
     m_progress = progress;

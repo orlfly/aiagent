@@ -24,6 +24,7 @@
 #define OPENAI_HPP_
 
 #include <include/cef_urlrequest.h>
+#include "include/base/cef_callback.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -39,15 +40,16 @@ using json = nlohmann::json;
 class OpenAI :public CefURLRequestClient
 {
 public:
-  OpenAI(std::string baseUrl,std::string token, std::string model, std::string version);
+    using CompleteCallback = base::OnceCallback<void(const json&)>;
+    OpenAI(std::string baseUrl,std::string token, std::string model, std::string version);
     void setFrame(CefRefPtr<CefFrame> frame){ mFrame=frame; }
     //openai completion api
-    void completion(std::string prompt);
-    void completionAzure(std::string prompt);
-    void chatCompletion(std::string prompt);
-    void chatCompletionAzure(std::string prompt);
-    void request(std::string function, const json &data);
-    void requestAzure(std::string function, const json &data);
+    void completion(std::string prompt, CompleteCallback callback);
+    void completionAzure(std::string prompt, CompleteCallback callback);
+    void chatCompletion(std::string prompt,CompleteCallback callback);
+    void chatCompletionAzure(std::string prompt,CompleteCallback callback);
+    void request(std::string function, const json &data,CompleteCallback callback);
+    void requestAzure(std::string function, const json &data,CompleteCallback callback);
     //prompt template api
     std::string prompt_template(std::string temp, const json &dict);
     
@@ -77,9 +79,8 @@ private:
     std::string mToken;
     std::string mModel;
     std::string mVersion;
-    int64_t upload_total_;
-    int64_t download_total_;
-    std::stringstream download_data_;
+    std::map<uint64_t,std::shared_ptr<std::stringstream>> m_dataMap;
+    std::map<uint64_t,CompleteCallback> m_interMap;
 private:
   IMPLEMENT_REFCOUNTING(OpenAI);
 };

@@ -15,12 +15,14 @@
 #include "RenderHandler.hpp"
 #include "JSV8Handler.hpp"
 #include "DisplayHandler.hpp"
-
+#include "LifeSpanHandler.hpp"
+#include "json.hpp"
 #include <string>
 #include <vector>
 #include <memory>
 #include <algorithm>
 
+using json = nlohmann::json;
 // ****************************************************************************
 //! \brief Interface class rendering a single web page.
 // ****************************************************************************
@@ -63,7 +65,7 @@ public:
     CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() override {
 	return this;
     };
-
+     
     // CefBrowserProcessHandler methods:
     virtual void OnContextInitialized() override;
 
@@ -81,6 +83,8 @@ public:
 					   CefRefPtr< CefFrame > frame,
 					   CefProcessId source_process,
 					   CefRefPtr< CefProcessMessage > message ) override;
+    void SengUserMessage(json& msg);
+    void UserCompletionCallback(CefRefPtr<CefBrowser> browser, const json& msg);
 private:
 
     //! \brief Where to draw on the OpenGL window
@@ -93,12 +97,14 @@ private:
     CefRefPtr<RenderHandler> m_render_handler = nullptr;
     CefRefPtr<LoadHandler> m_load_handler = nullptr;
     CefRefPtr<DisplayHandler> m_display_handler = nullptr;
+    CefRefPtr<LifeSpanHandler> m_lifespan_handler = nullptr;
     CefRefPtr<JSV8Handler> m_jsHandler = nullptr;
 
     //! \brief OpenGL has created GPU elements with success
     bool m_initialized = false;
 
     std::string m_extensionCode;
+    CefRefPtr<OpenAI> m_openai=nullptr;
 
 public:
 

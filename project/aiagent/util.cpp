@@ -1,5 +1,5 @@
 #include "util.h"
-
+#include <iostream>
 bool FileExists(const char* path) {
     FILE* f = fopen(path, "rb");
     if (f) {
@@ -14,9 +14,9 @@ CefRefPtr<CefStreamReader> GetBinaryResourceReader(const char* resource_name) {
     if (!GetResourceDir(path))
       return nullptr;
 
-    path.append("/");
+    path.append("html/");
     path.append(resource_name);
-
+    std::cout<<path<<std::endl;
     if (!FileExists(path.c_str()))
       return nullptr;
 

@@ -14,7 +14,9 @@ set(AIAGENT_SRCS
   LoadHandler.cpp 
   LoadHandler.hpp  
   DisplayHandler.cpp 
-  DisplayHandler.hpp  
+  DisplayHandler.hpp
+  LifeSpanHandler.cpp
+  LifeSpanHandler.hpp
   RenderHandler.cpp  
   RenderHandler.hpp
   JSV8Handler.cpp  
@@ -27,6 +29,8 @@ set(AIAGENT_SRCS
   GLWindow.hpp
   WebStream.cpp
   WebStream.hpp
+  ApiServer.cpp
+  ApiServer.hpp
   openai.hpp
   openai.cpp
   util.h

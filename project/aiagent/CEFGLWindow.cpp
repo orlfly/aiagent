@@ -15,6 +15,7 @@ CEFGLWindow::CEFGLWindow(uint32_t const width, uint32_t const height, float cons
 //------------------------------------------------------------------------------
 CEFGLWindow::~CEFGLWindow()
 {
+    m_server->StopServer(ServerHandler::CompleteCallback());
     CefShutdown();
 }
 
@@ -44,6 +45,12 @@ bool CEFGLWindow::setup()
     GLCHECK(glDisable(GL_BLEND));
     GLCHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
+    m_server = new ServerHandler(m_browser);
+
+    // Start the server. OnComplete will be executed upon completion.
+    m_server->StartServer(9191,
+                          ServerHandler::CompleteCallback());
+    
     return true;
 }
 

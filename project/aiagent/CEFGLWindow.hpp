@@ -2,11 +2,12 @@
 // https://github.com/Lecrapouille/OpenGLCppWrapper
 
 #ifndef CEFGLWINDOW_HPP
-#  define CEFGLWINDOW_HPP
+#define CEFGLWINDOW_HPP
 
 // Base application class
-#  include "GLWindow.hpp"
-#  include "BrowserView.hpp"
+#include "GLWindow.hpp"
+#include "BrowserView.hpp"
+#include "ApiServer.hpp"
 
 // ****************************************************************************
 //! \brief Extend the OpenGL base window and add Chromium Embedded Framework
@@ -33,6 +34,8 @@ private:
 
     //! \brief List of BrowserView managed by createBrowser() and
     CefRefPtr<BrowserView> m_browser;
+    CefRefPtr<ServerHandler> m_server;
+
     float m_scale;
 };
 

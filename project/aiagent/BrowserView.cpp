@@ -6,12 +6,15 @@
 #include "GLCore.hpp"
 #include "include/wrapper/cef_helpers.h"
 #include "util.h"
+#include "include/base/cef_logging.h"
+#include "json.hpp"
 #include <fstream>
+using json = nlohmann::json;
 
 std::string FileToString(std::string wp, std::string path) {
     std::ifstream inputFile(wp+path);
     if (!inputFile.is_open()) {
-        std::cerr << "Error opening the file!" << std::endl;
+        LOG(ERROR) << "Error opening the file!" << std::endl;
         return ""; // Exit with an error code
     }
     
@@ -63,11 +66,16 @@ bool BrowserView::viewport(float x, float y, float w, float h)
 BrowserView::BrowserView(float scale)
   : m_viewport(0.0f, 0.0f, 1.0f, 1.0f), m_scale(scale), m_extensionCode("")
 {
-  std::string epath;
-  bool sucess = GetResourceDir(epath);
-  if(sucess){
-    m_extensionCode = FileToString(epath, "script/aiagent.js");
-  }
+    std::string epath;
+    bool sucess = GetResourceDir(epath);
+    if(sucess){
+      m_extensionCode = FileToString(epath, "script/aiagent.js");
+    }
+    //m_openai = new OpenAI("http://192.168.8.37:8000/", "EMPTY", "Qwen-14B-Chat","v1");
+    m_openai = new OpenAI("https://kingsware3.openai.azure.com/openai/deployments/",
+     			  "3d93f1f773414565813b79e1767000ef",
+     			  "kingsgpt35_16k",
+     			  "2023-07-01-preview");
 }
 
 //------------------------------------------------------------------------------
@@ -117,19 +125,15 @@ void BrowserView::OnContextInitialized() {
     m_load_handler = new LoadHandler();
 
     m_display_handler = new DisplayHandler();
+
+    m_lifespan_handler = new LifeSpanHandler();
     
     CefBrowserSettings browserSettings;
     browserSettings.windowless_frame_rate = 60; // 30 is default
 
-    m_client = new BrowserClient(m_render_handler, m_load_handler, m_display_handler);
-    
-    CefRefPtr<CefCommandLine> command_line =
-        CefCommandLine::GetGlobalCommandLine();
-    
-    std::string url = command_line->GetSwitchValue("url");
-    if (url.empty()) {
-        url = "http://www.baidu.com";
-    }
+    m_client = new BrowserClient(m_openai, m_render_handler, m_load_handler, m_display_handler, m_lifespan_handler);
+        
+    std::string url = "http://www.baidu.com";
     
     m_browser = CefBrowserHost::CreateBrowserSync(window_info, m_client.get(),
                                                   url, browserSettings,
@@ -148,9 +152,9 @@ void BrowserView::OnContextCreated(CefRefPtr<CefBrowser> browser,
         m_jsHandler = new JSV8Handler(m_browser);
     }
     
-    CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("scriptGen", m_jsHandler);
+    CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("HtmlContentHandler", m_jsHandler);
 
-    object->SetValue("scriptGen", func, V8_PROPERTY_ATTRIBUTE_NONE);
+    object->SetValue("HtmlContentHandler", func, V8_PROPERTY_ATTRIBUTE_NONE);
 }
 
 void BrowserView::OnWebKitInitialized() {
@@ -159,15 +163,41 @@ void BrowserView::OnWebKitInitialized() {
         CefRegisterExtension("v8/ai", m_extensionCode, nullptr);
     }
 }
-
+void BrowserView::SengUserMessage(json& msg){
+    CefRefPtr<CefV8Context> context = CefV8Context::GetCurrentContext();
+    CefRefPtr<CefProcessMessage> bmsg = CefProcessMessage::Create("User");
+    CefRefPtr<CefListValue> args = bmsg->GetArgumentList();
+    args->SetString(0, msg.dump());
+    
+    m_browser->GetMainFrame()->SendProcessMessage(PID_BROWSER, bmsg);
+}
 bool BrowserView::OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
 					    CefRefPtr< CefFrame > frame,
 					    CefProcessId source_process,
 					    CefRefPtr< CefProcessMessage > message )
 {
+    LOG(INFO)<<"BrowserView hangdle message:"<< message->GetName() <<std::endl;
     CefRefPtr<CefListValue> args = message->GetArgumentList();
-    std::cout<< args->GetString(0) <<std::endl;
-    frame->ExecuteJavaScript(args->GetString(0), frame->GetURL(), 0);
-    std::cout<<"+++++++++++++++++++++++++++++++++++1"<<std::endl;
+    if(message->GetName() == "JSCode"){
+	frame->ExecuteJavaScript(args->GetString(0), frame->GetURL(), 0);
+    }else if(message->GetName() == "User"){
+        json input = json::parse(args->GetString(0).ToString());
+	CefRefPtr<CefCommandLine> command_line =
+	  CefCommandLine::GetGlobalCommandLine();
+	std::string name = command_line->GetSwitchValue("name");
+	json dict;
+	dict["name"] = name;
+	dict["input"] = input["msg"];
+	
+	std::string prompt = m_openai->prompt_template("user.prom",dict);
+	//m_openai->chatCompletion(prompt, UserCompletionCallback);
+	m_openai->chatCompletionAzure(prompt, base::BindOnce(&BrowserView::UserCompletionCallback, this, browser));
+    }
     return true;
+}
+void BrowserView::UserCompletionCallback(CefRefPtr<CefBrowser> browser, const json& msg)
+{
+    std::string task = msg["choices"][0]["message"]["content"].get<std::string>();
+		
+    std::cout<<task<<std::endl;
 }

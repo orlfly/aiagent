@@ -5,18 +5,17 @@
 
 using json = nlohmann::json;
 
-BrowserClient::BrowserClient(CefRefPtr<CefRenderHandler> ptr,
+BrowserClient::BrowserClient(CefRefPtr<OpenAI> openai,
+			     CefRefPtr<CefRenderHandler> ptr,
 			     CefRefPtr<CefLoadHandler> loadptr,
-			     CefRefPtr<CefDisplayHandler> displayptr)
-  : m_renderHandler(ptr),
+			     CefRefPtr<CefDisplayHandler> displayptr,
+			     CefRefPtr<CefLifeSpanHandler> lifespanptr)
+  : m_openai(openai),
+    m_renderHandler(ptr),
     m_loadHandler(loadptr),
-    m_displayHandler(displayptr)
+    m_displayHandler(displayptr),
+    m_lifeSpanHandler(lifespanptr)
 {
-    //m_openai = new OpenAI("http://192.168.8.37:8000/", "EMPTY", "Qwen-14B-Chat","v1");
-    m_openai = new OpenAI("https://kingsware3.openai.azure.com/openai/deployments/",
-			  "3d93f1f773414565813b79e1767000ef",
-			  "kingsgpt35_16k",
-			  "2023-07-01-preview");
 }
 CefRefPtr<CefRenderHandler> BrowserClient::GetRenderHandler()
 {
@@ -29,6 +28,10 @@ CefRefPtr<CefLoadHandler> BrowserClient::GetLoadHandler()
 CefRefPtr<CefDisplayHandler> BrowserClient::GetDisplayHandler()
 {
     return m_displayHandler;
+}
+CefRefPtr<CefLifeSpanHandler> BrowserClient::GetLifeSpanHandler()
+{
+    return m_lifeSpanHandler;
 }
 std::string BrowserClient::CalEleDesc(json &data){
     std::stringstream ssprompt;
@@ -54,22 +57,32 @@ std::string BrowserClient::CalEleDesc(json &data){
     }
     return ssprompt.str();
 }
-bool BrowserClient::OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
-					      CefRefPtr< CefFrame > frame,
+bool BrowserClient::OnProcessMessageReceived( CefRefPtr<CefBrowser> browser,
+					      CefRefPtr<CefFrame> frame,
 					      CefProcessId source_process,
-					      CefRefPtr< CefProcessMessage > message )
+					      CefRefPtr<CefProcessMessage> message )
 {
+    LOG(INFO)<<"BrowserClient handle message:"<<message->GetName()<<std::endl;
     CefRefPtr<CefListValue> args = message->GetArgumentList();
+    if(message->GetName() == "HtmlContent"){
 
-    json eleArr = json::parse(args->GetString(0).ToString());
-
-    json dict;
-    dict["context"] = CalEleDesc(eleArr);
-
-    std::string prompt = m_openai->prompt_template("script.prom",dict);
-    
-    m_openai->setFrame(frame);
-    //m_openai->chatCompletion(prompt);
-    m_openai->chatCompletionAzure(prompt);
+	json eleArr = json::parse(args->GetString(0).ToString());
+	
+	json dict;
+	dict["context"] = CalEleDesc(eleArr);
+	
+	std::string prompt = m_openai->prompt_template("script.prom",dict);
+	//m_openai->chatCompletion(prompt, base::BindOnce(&BrowserView::UserCompletionCallback, browser));
+	m_openai->chatCompletionAzure(prompt, base::BindOnce(&BrowserClient::ScriptCompletionCallback, this, browser));
+    }
     return true;
+}
+void BrowserClient::ScriptCompletionCallback(CefRefPtr<CefBrowser> browser, const json& msg)
+{
+    std::string jscode = msg["choices"][0]["message"]["content"].get<std::string>();
+		
+    CefRefPtr<CefProcessMessage> jsmsg = CefProcessMessage::Create("JSCode");
+    CefRefPtr<CefListValue> args = jsmsg->GetArgumentList();
+    args->SetString(0, jscode);
+    browser->GetMainFrame()->SendProcessMessage(PID_RENDERER, jsmsg);
 }
