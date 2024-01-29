@@ -82,3 +82,5 @@ If you would like to contribute source code changes to CEF please follow the bel
 * Follow the style of existing CEF source files. In general CEF uses the [Chromium C++ style guide](https://chromium.googlesource.com/chromium/src/+/master/styleguide/c++/c++.md).
 * Include new or modified unit tests as appropriate to the functionality.
 * Not include unnecessary or unrelated changes.
+----mediamtx start command
+sudo docker run --rm -d -e MTX_PROTOCOLS=tcp -e MTX_WEBRTCADDITIONALHOSTS=192.168.107.19 -p 8554:8554 -p 1935:1935 -p 8888:8888 -p 8889:8889 -p 8890:8890/udp -p 8189:8189/udp bluenviron/mediamtx
