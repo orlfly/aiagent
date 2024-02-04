@@ -1,8 +1,30 @@
 #include "ApiServer.hpp"
 #include "util.h"
 #include "json.hpp"
+#include "include/base/cef_logging.h"
+#include "BrowserTask.hpp"
+#include <sstream>
+
 
 using json = nlohmann::json;
+
+
+std::list<std::string> split(const std::string& s, const std::string& c) {
+    std::list<std::string> result;
+    size_t len = c.length();
+    size_t begin = 0;
+    while (true) {
+        size_t end = s.find_first_of(c, begin);
+	result.push_back(s.substr(begin, end - begin));
+	
+	if (end == std::string::npos) {
+	    break;
+	}
+      
+	begin = end + len;
+    }
+    return result;
+}
 
 void ServerHandler::OnServerCreated(CefRefPtr<CefServer> server){
     DCHECK(!m_server);
@@ -26,7 +48,7 @@ void ServerHandler::OnHttpRequest(CefRefPtr<CefServer> server,
       path = path.substr(1);
     }
     if (path.empty()) {
-      path = "websocket.html";
+      path = "index.html";
     }
     std::string mime_type;
     const size_t sep = path.find_last_of(".");
@@ -58,11 +80,27 @@ void ServerHandler::OnWebSocketMessage(CefRefPtr<CefServer> server,
 				       size_t data_size){
     // Echo the reverse of the message.
     json msg = json::parse((char*)data);
-    std::string message = msg.dump();
-
-    m_browser->SengUserMessage(msg);
     
-    server->SendWebSocketMessage(connection_id, message.c_str(), message.size());
+    CefRefPtr<CefCommandLine> command_line =
+      CefCommandLine::GetGlobalCommandLine();
+    std::string name = command_line->GetSwitchValue("name");
+    if(name.length()==0)
+    {
+	name = "金大能";
+    }
+    json dict;
+    dict["name"] = name;
+    dict["input"] = msg["msg"];
+    
+    std::string prompt = m_browser->GetOpenAI()->prompt_template("user.prom",dict);
+    LOG(INFO)<<prompt<<std::endl;
+    //m_browser->GetOpenAI()->chatCompletion(prompt, base::BindOnce(&ServerHandler::UserCompletionCallback, this, connection_id));
+    m_browser->GetOpenAI()->chatCompletionAzure(prompt, base::BindOnce(&ServerHandler::UserCompletionCallback, this, server, connection_id));
+
+    json jresponse;
+    jresponse["msg"] = "思考中.....";
+    std::string response = jresponse.dump();
+    server->SendWebSocketMessage(connection_id, response.c_str(), response.size());
 }
 
 void ServerHandler::RunCompleteCallback(bool success){
@@ -78,6 +116,46 @@ void ServerHandler::RunCompleteCallback(bool success){
     }
 }
 
+void ServerHandler::UserCompletionCallback(CefRefPtr<CefServer> server,
+					   int connection_id,
+					   const json& msg){
+    std::string task = msg["choices"][0]["message"]["content"].get<std::string>();
+    LOG(INFO)<<task<<std::endl;
+    std::list<std::string> tasks = TaskParser(task);
+    std::list<std::shared_ptr<BrowserTask>> stasks;
+    
+    for (auto& s : tasks) {
+        LOG(INFO)<<"create task:"<< s <<std::endl;
+	int tid = m_tid;
+	m_tid++;
+        std::shared_ptr<BrowserTask> stask(new BrowserTask(tid,s,base::BindOnce(&ServerHandler::BrowserCompletionCallback,this, server, connection_id)));
+        stasks.push_back(stask);
+    }
+    m_browser->AddTask(stasks);
+    json jresponse;
+    jresponse["msg"] = "处理完毕！";
+    std::string response = jresponse.dump();
+    server->SendWebSocketMessage(connection_id, response.c_str(), response.size());
+}
+
+void ServerHandler::BrowserCompletionCallback(CefRefPtr<CefServer> server,
+					   int connection_id,
+					   const json& msg){
+    std::string response = msg.dump();
+    LOG(INFO) << response << std::endl;
+    server->SendWebSocketMessage(connection_id, response.c_str(), response.size());
+}
+
+std::list<std::string> ServerHandler::TaskParser(std::string tasks)
+{
+   
+   std::size_t ffound = tasks.find("[");
+   std::size_t rfound = tasks.rfind("]");
+   std::string substr = tasks.substr(ffound+1, rfound-ffound-1);
+   std::cout << substr << std::endl;
+   std::list<std::string> taskArr= split(substr,"]->[");
+   return taskArr;
+}
 void ServerHandler::SendHttpResponseStream(CefRefPtr<CefServer> server,
 					   int connection_id,
 					   const std::string& mime_type,
@@ -87,18 +165,21 @@ void ServerHandler::SendHttpResponseStream(CefRefPtr<CefServer> server,
     stream->Seek(0, SEEK_END);
     int64_t content_length = stream->Tell();
     stream->Seek(0, SEEK_SET);
-
+    std::cout << "data length:" << content_length << std::endl;
     // Send response headers.
     server->SendHttpResponse(connection_id, 200, mime_type, content_length,
                              extra_headers);
 
     // Send stream contents.
-    char buffer[8192];
+    char buffer[1024000];
     size_t read;
+    size_t total=0;
     do {
       read = stream->Read(buffer, 1, sizeof(buffer));
+      total += read;
       if (read > 0) {
         server->SendRawData(connection_id, buffer, read);
+	std::cout << "read data:" << total << std::endl;
       }
     } while (!stream->Eof() && read != 0);
 

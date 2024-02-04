@@ -11,6 +11,7 @@
 #include "include/cef_response.h"
 #include "util.h"
 #include <iostream>
+#include <list>
 
 // Handles the HTTP/WebSocket server.
 class ServerHandler : public CefServerHandler {
@@ -77,6 +78,13 @@ public:
 
  private:
   void RunCompleteCallback(bool success);
+
+  std::list<std::string> TaskParser(std::string tasks);
+
+  void UserCompletionCallback(CefRefPtr<CefServer> server, int connection_id, const json& msg);
+
+  void BrowserCompletionCallback(CefRefPtr<CefServer> server, int connection_id, const json& msg);
+
   
   static void SendHttpResponseStream(CefRefPtr<CefServer> server,
                                      int connection_id,
@@ -89,6 +97,7 @@ public:
   int m_port;
   CompleteCallback m_complete_callback;
   CefRefPtr<BrowserView> m_browser;
+  int m_tid=0;
 
   IMPLEMENT_REFCOUNTING(ServerHandler);
   DISALLOW_COPY_AND_ASSIGN(ServerHandler);

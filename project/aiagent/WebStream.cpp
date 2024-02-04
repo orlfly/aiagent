@@ -83,6 +83,8 @@ AVStream* WebStream::CreateStream(AVCodec **codec,int width, int height)
             c->time_base.num = 1;
             c->gop_size = 12; /* emit one intra frame every twelve frames at most */
             c->pix_fmt = AV_PIX_FMT_YUV420P;
+	    /*remove b frames*/
+	    c->max_b_frames = 0;
         }
     }
 

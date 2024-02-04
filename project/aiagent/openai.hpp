@@ -79,10 +79,10 @@ private:
     std::string mToken;
     std::string mModel;
     std::string mVersion;
-    std::map<uint64_t,std::shared_ptr<std::stringstream>> m_dataMap;
-    std::map<uint64_t,CompleteCallback> m_interMap;
+    std::map<std::string,std::shared_ptr<std::stringstream>> m_dataMap;
+    std::map<std::string,CompleteCallback> m_interMap;
+    uint64_t m_rid; 
 private:
   IMPLEMENT_REFCOUNTING(OpenAI);
 };
-
 #endif // OPENAI_HPP_

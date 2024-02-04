@@ -13,8 +13,6 @@ set(AIAGENT_SRCS
   BrowserClient.hpp
   LoadHandler.cpp 
   LoadHandler.hpp  
-  DisplayHandler.cpp 
-  DisplayHandler.hpp
   LifeSpanHandler.cpp
   LifeSpanHandler.hpp
   RenderHandler.cpp  

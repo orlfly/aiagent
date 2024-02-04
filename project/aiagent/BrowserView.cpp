@@ -76,6 +76,10 @@ BrowserView::BrowserView(float scale)
      			  "3d93f1f773414565813b79e1767000ef",
      			  "kingsgpt35_16k",
      			  "2023-07-01-preview");
+
+    m_taskQue = std::shared_ptr<std::queue<std::shared_ptr<BrowserTask>>>(new std::queue<std::shared_ptr<BrowserTask>>());
+
+    m_load_handler = new LoadHandler();
 }
 
 //------------------------------------------------------------------------------
@@ -122,23 +126,19 @@ void BrowserView::OnContextInitialized() {
     m_initialized = m_render_handler->init();
     m_render_handler->reshape(128, 128); // initial size
 
-    m_load_handler = new LoadHandler();
-
-    m_display_handler = new DisplayHandler();
-
     m_lifespan_handler = new LifeSpanHandler();
     
     CefBrowserSettings browserSettings;
     browserSettings.windowless_frame_rate = 60; // 30 is default
 
-    m_client = new BrowserClient(m_openai, m_render_handler, m_load_handler, m_display_handler, m_lifespan_handler);
+    m_client = new BrowserClient(m_openai, m_taskQue, m_render_handler, m_load_handler, m_lifespan_handler);
         
-    std::string url = "http://www.baidu.com";
+    std::string url = "about:blank";
     
     m_browser = CefBrowserHost::CreateBrowserSync(window_info, m_client.get(),
                                                   url, browserSettings,
                                                   nullptr, nullptr);
-
+    LOG(INFO) << "open browser finish!" << std::endl;
 }
 
 void BrowserView::OnContextCreated(CefRefPtr<CefBrowser> browser,
@@ -148,29 +148,24 @@ void BrowserView::OnContextCreated(CefRefPtr<CefBrowser> browser,
   
     CefRefPtr<CefV8Value> object = context->GetGlobal();
 
-    if(m_jsHandler==nullptr){
-        m_jsHandler = new JSV8Handler(m_browser);
-    }
+    m_jsHandler = new JSV8Handler(m_browser, m_load_handler);
     
-    CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("HtmlContentHandler", m_jsHandler);
+    CefRefPtr<CefV8Value> contentfunc = CefV8Value::CreateFunction("HtmlContentHandler", m_jsHandler);
+    CefRefPtr<CefV8Value> taskfunc = CefV8Value::CreateFunction("TaskTimeout", m_jsHandler);
 
-    object->SetValue("HtmlContentHandler", func, V8_PROPERTY_ATTRIBUTE_NONE);
+    object->SetValue("HtmlContentHandler", contentfunc, V8_PROPERTY_ATTRIBUTE_NONE);
+    object->SetValue("TaskTimeout", taskfunc, V8_PROPERTY_ATTRIBUTE_NONE);
+    LOG(INFO) << "Regist  handler finish!" << std::endl;
 }
 
 void BrowserView::OnWebKitInitialized() {
     // Register the extension.
     if(m_extensionCode.length()>0){
+        LOG(INFO) << "Regist aiagent object..." << std::endl;
         CefRegisterExtension("v8/ai", m_extensionCode, nullptr);
     }
 }
-void BrowserView::SengUserMessage(json& msg){
-    CefRefPtr<CefV8Context> context = CefV8Context::GetCurrentContext();
-    CefRefPtr<CefProcessMessage> bmsg = CefProcessMessage::Create("User");
-    CefRefPtr<CefListValue> args = bmsg->GetArgumentList();
-    args->SetString(0, msg.dump());
-    
-    m_browser->GetMainFrame()->SendProcessMessage(PID_BROWSER, bmsg);
-}
+
 bool BrowserView::OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
 					    CefRefPtr< CefFrame > frame,
 					    CefProcessId source_process,
@@ -179,25 +174,27 @@ bool BrowserView::OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
     LOG(INFO)<<"BrowserView hangdle message:"<< message->GetName() <<std::endl;
     CefRefPtr<CefListValue> args = message->GetArgumentList();
     if(message->GetName() == "JSCode"){
+        std::stringstream cmd;
+	cmd<<"aiagent.taskTimer("<<args->GetInt(1)<<");"<<std::endl;
+	frame->ExecuteJavaScript(cmd.str(), frame->GetURL(), 0);
 	frame->ExecuteJavaScript(args->GetString(0), frame->GetURL(), 0);
-    }else if(message->GetName() == "User"){
-        json input = json::parse(args->GetString(0).ToString());
-	CefRefPtr<CefCommandLine> command_line =
-	  CefCommandLine::GetGlobalCommandLine();
-	std::string name = command_line->GetSwitchValue("name");
-	json dict;
-	dict["name"] = name;
-	dict["input"] = input["msg"];
-	
-	std::string prompt = m_openai->prompt_template("user.prom",dict);
-	//m_openai->chatCompletion(prompt, UserCompletionCallback);
-	m_openai->chatCompletionAzure(prompt, base::BindOnce(&BrowserView::UserCompletionCallback, this, browser));
     }
     return true;
 }
-void BrowserView::UserCompletionCallback(CefRefPtr<CefBrowser> browser, const json& msg)
-{
-    std::string task = msg["choices"][0]["message"]["content"].get<std::string>();
-		
-    std::cout<<task<<std::endl;
+
+void BrowserView::AddTask(std::list<std::shared_ptr<BrowserTask>> tasks){
+    bool refresh = false;
+    if(m_taskQue->empty())
+    {
+        refresh = true;
+    }
+    for (auto& s : tasks) {
+        LOG(INFO) << "add task to queue:" << s->m_taskDesc << std::endl;
+        m_taskQue->push(s);
+    }
+    if(refresh) 
+    {
+	std::string cmd = "aiagent.visualBox();";
+	m_browser->GetMainFrame()->ExecuteJavaScript(cmd, m_browser->GetMainFrame()->GetURL(), 0);
+    }
 }
