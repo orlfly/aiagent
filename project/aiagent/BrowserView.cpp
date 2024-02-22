@@ -131,9 +131,10 @@ void BrowserView::OnContextInitialized() {
     CefBrowserSettings browserSettings;
     browserSettings.windowless_frame_rate = 60; // 30 is default
 
-    m_client = new BrowserClient(m_openai, m_taskQue, m_render_handler, m_load_handler, m_lifespan_handler);
+    m_client = new BrowserClient(m_openai, this, m_render_handler, m_load_handler, m_lifespan_handler);
         
     std::string url = "about:blank";
+    //std::string url = "http://www.baidu.com";
     
     m_browser = CefBrowserHost::CreateBrowserSync(window_info, m_client.get(),
                                                   url, browserSettings,
@@ -150,11 +151,15 @@ void BrowserView::OnContextCreated(CefRefPtr<CefBrowser> browser,
 
     m_jsHandler = new JSV8Handler(m_browser, m_load_handler);
     
-    CefRefPtr<CefV8Value> contentfunc = CefV8Value::CreateFunction("HtmlContentHandler", m_jsHandler);
+    CefRefPtr<CefV8Value> executefunc = CefV8Value::CreateFunction("ExecuteTask", m_jsHandler);
+    CefRefPtr<CefV8Value> evaluatefunc = CefV8Value::CreateFunction("EvaluateResult", m_jsHandler);
     CefRefPtr<CefV8Value> taskfunc = CefV8Value::CreateFunction("TaskTimeout", m_jsHandler);
+    CefRefPtr<CefV8Value> summaryfunc = CefV8Value::CreateFunction("LLMSummary", m_jsHandler);
 
-    object->SetValue("HtmlContentHandler", contentfunc, V8_PROPERTY_ATTRIBUTE_NONE);
+    object->SetValue("ExecuteTask", executefunc, V8_PROPERTY_ATTRIBUTE_NONE);
+    object->SetValue("EvaluateResult", evaluatefunc, V8_PROPERTY_ATTRIBUTE_NONE);
     object->SetValue("TaskTimeout", taskfunc, V8_PROPERTY_ATTRIBUTE_NONE);
+    object->SetValue("LLMSummary", summaryfunc, V8_PROPERTY_ATTRIBUTE_NONE);
     LOG(INFO) << "Regist  handler finish!" << std::endl;
 }
 
@@ -174,27 +179,29 @@ bool BrowserView::OnProcessMessageReceived( CefRefPtr< CefBrowser > browser,
     LOG(INFO)<<"BrowserView hangdle message:"<< message->GetName() <<std::endl;
     CefRefPtr<CefListValue> args = message->GetArgumentList();
     if(message->GetName() == "JSCode"){
-        std::stringstream cmd;
-	cmd<<"aiagent.taskTimer("<<args->GetInt(1)<<");"<<std::endl;
-	frame->ExecuteJavaScript(cmd.str(), frame->GetURL(), 0);
+        //std::stringstream cmd;
+	//cmd<<"aiagent.taskTimer("<<args->GetInt(1)<<");"<<std::endl;
+	//frame->ExecuteJavaScript(cmd.str(), frame->GetURL(), 0);
 	frame->ExecuteJavaScript(args->GetString(0), frame->GetURL(), 0);
+    }else if(message->GetName() == "ContentLoaded"){
+	browser->GetMainFrame()->SendProcessMessage(PID_BROWSER, message);
     }
     return true;
 }
 
-void BrowserView::AddTask(std::list<std::shared_ptr<BrowserTask>> tasks){
-    bool refresh = false;
-    if(m_taskQue->empty())
-    {
-        refresh = true;
-    }
-    for (auto& s : tasks) {
-        LOG(INFO) << "add task to queue:" << s->m_taskDesc << std::endl;
-        m_taskQue->push(s);
-    }
-    if(refresh) 
-    {
-	std::string cmd = "aiagent.visualBox();";
-	m_browser->GetMainFrame()->ExecuteJavaScript(cmd, m_browser->GetMainFrame()->GetURL(), 0);
+void BrowserView::Execute(std::string task, CefRefPtr<CefServer> server, int connection_id){
+    std::stringstream cmd;
+    cmd<<"aiagent.Execute('"<<task<<"');"<<std::endl;
+    m_browser->GetMainFrame()->ExecuteJavaScript(cmd.str(), m_browser->GetMainFrame()->GetURL(), 0);
+    m_ApiServer = server;
+    m_ConnectionId = connection_id;
+}
+
+void BrowserView::OnExecutFinish(std::string msg){
+    if(m_ApiServer != nullptr && m_ConnectionId >0){
+        json jresponse;
+	jresponse["msg"] = msg;
+	std::string response = jresponse.dump();
+	m_ApiServer ->SendWebSocketMessage(m_ConnectionId, response.c_str(), response.size());
     }
 }

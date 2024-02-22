@@ -79,12 +79,7 @@ public:
  private:
   void RunCompleteCallback(bool success);
 
-  std::list<std::string> TaskParser(std::string tasks);
-
   void UserCompletionCallback(CefRefPtr<CefServer> server, int connection_id, const json& msg);
-
-  void BrowserCompletionCallback(CefRefPtr<CefServer> server, int connection_id, const json& msg);
-
   
   static void SendHttpResponseStream(CefRefPtr<CefServer> server,
                                      int connection_id,

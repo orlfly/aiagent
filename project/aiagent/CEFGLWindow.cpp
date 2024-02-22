@@ -22,7 +22,7 @@ CEFGLWindow::~CEFGLWindow()
 //------------------------------------------------------------------------------
 CefRefPtr<BrowserView> CEFGLWindow::createBrowser()
 {
-  CefRefPtr<BrowserView> app = new BrowserView(m_scale);
+    CefRefPtr<BrowserView> app = new BrowserView(m_scale);
     m_browser=app;
     return app;
 }

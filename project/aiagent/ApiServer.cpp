@@ -81,21 +81,7 @@ void ServerHandler::OnWebSocketMessage(CefRefPtr<CefServer> server,
     // Echo the reverse of the message.
     json msg = json::parse((char*)data);
     
-    CefRefPtr<CefCommandLine> command_line =
-      CefCommandLine::GetGlobalCommandLine();
-    std::string name = command_line->GetSwitchValue("name");
-    if(name.length()==0)
-    {
-	name = "金大能";
-    }
-    json dict;
-    dict["name"] = name;
-    dict["input"] = msg["msg"];
-    
-    std::string prompt = m_browser->GetOpenAI()->prompt_template("user.prom",dict);
-    LOG(INFO)<<prompt<<std::endl;
-    //m_browser->GetOpenAI()->chatCompletion(prompt, base::BindOnce(&ServerHandler::UserCompletionCallback, this, connection_id));
-    m_browser->GetOpenAI()->chatCompletionAzure(prompt, base::BindOnce(&ServerHandler::UserCompletionCallback, this, server, connection_id));
+    m_browser->Execute(msg["msg"], server , connection_id);
 
     json jresponse;
     jresponse["msg"] = "思考中.....";
@@ -116,46 +102,6 @@ void ServerHandler::RunCompleteCallback(bool success){
     }
 }
 
-void ServerHandler::UserCompletionCallback(CefRefPtr<CefServer> server,
-					   int connection_id,
-					   const json& msg){
-    std::string task = msg["choices"][0]["message"]["content"].get<std::string>();
-    LOG(INFO)<<task<<std::endl;
-    std::list<std::string> tasks = TaskParser(task);
-    std::list<std::shared_ptr<BrowserTask>> stasks;
-    
-    for (auto& s : tasks) {
-        LOG(INFO)<<"create task:"<< s <<std::endl;
-	int tid = m_tid;
-	m_tid++;
-        std::shared_ptr<BrowserTask> stask(new BrowserTask(tid,s,base::BindOnce(&ServerHandler::BrowserCompletionCallback,this, server, connection_id)));
-        stasks.push_back(stask);
-    }
-    m_browser->AddTask(stasks);
-    json jresponse;
-    jresponse["msg"] = "处理完毕！";
-    std::string response = jresponse.dump();
-    server->SendWebSocketMessage(connection_id, response.c_str(), response.size());
-}
-
-void ServerHandler::BrowserCompletionCallback(CefRefPtr<CefServer> server,
-					   int connection_id,
-					   const json& msg){
-    std::string response = msg.dump();
-    LOG(INFO) << response << std::endl;
-    server->SendWebSocketMessage(connection_id, response.c_str(), response.size());
-}
-
-std::list<std::string> ServerHandler::TaskParser(std::string tasks)
-{
-   
-   std::size_t ffound = tasks.find("[");
-   std::size_t rfound = tasks.rfind("]");
-   std::string substr = tasks.substr(ffound+1, rfound-ffound-1);
-   std::cout << substr << std::endl;
-   std::list<std::string> taskArr= split(substr,"]->[");
-   return taskArr;
-}
 void ServerHandler::SendHttpResponseStream(CefRefPtr<CefServer> server,
 					   int connection_id,
 					   const std::string& mime_type,

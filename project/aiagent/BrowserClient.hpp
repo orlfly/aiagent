@@ -17,12 +17,13 @@ using json = nlohmann::json;
 //! \brief Provide access to browser-instance-specific callbacks. A single
 //! CefClient instance can be shared among any number of browsers.
 // *************************************************************************
+class BrowserView;
 class BrowserClient: public CefClient
 {
 public:
 
     BrowserClient(CefRefPtr<OpenAI> openai,
-		  std::shared_ptr<std::queue<std::shared_ptr<BrowserTask>>> taskQue,
+		  CefRefPtr<BrowserView> browser,
 		  CefRefPtr<CefRenderHandler> ptr,
 		  CefRefPtr<LoadHandler> loadptr,
 		  CefRefPtr<CefLifeSpanHandler> lifespanptr);
@@ -34,21 +35,25 @@ public:
 					   CefRefPtr<CefFrame> frame,
 					   CefProcessId source_process,
 					   CefRefPtr< CefProcessMessage > message ) override;
-    void ScriptCompletionCallback(CefRefPtr<CefBrowser> browser, int nexttask, const json& msg);
-    void ResultCompletionCallback(CefRefPtr<CefBrowser> browser, std::string content, const json& msg);
+    void TaskCompletionCallback(CefRefPtr<CefBrowser> browser, const std::string content, const json& msg);
+    void EvaluateCompletionCallback(CefRefPtr<CefBrowser> browser,
+				    const std::string site,
+				    const std::string problem,
+				    const std::string step,
+				    const std::string content,
+				    const json& msg);
+    void ScriptCompletionCallback(CefRefPtr<CefBrowser> browser, const json& msg);
+    void SummaryCompletionCallback(CefRefPtr<CefBrowser> browser, const json& msg);
 private:
-  void DoTask(CefRefPtr<CefBrowser> browser, std::string content);
     std::string CalEleDesc(json &data);
     CefRefPtr<OpenAI> m_openai;
+    CefRefPtr<BrowserView> m_browser;
     CefRefPtr<CefRenderHandler> m_renderHandler;
     CefRefPtr<LoadHandler> m_loadHandler;
     CefRefPtr<CefLifeSpanHandler> m_lifeSpanHandler;
 
-    std::shared_ptr<std::queue<std::shared_ptr<BrowserTask>>> m_taskQue = nullptr;
-
-    std::map<int,std::shared_ptr<BrowserTask>> m_taskMap;
-    std::string m_currentOp;
-
+    std::string m_currentStep;
+    std::string m_currentProblem;
     IMPLEMENT_REFCOUNTING(BrowserClient);
 };
 

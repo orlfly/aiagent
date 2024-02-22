@@ -14,11 +14,23 @@ bool JSV8Handler::Execute(const CefString& name,
 			  CefString& exception)
 {
     LOG(INFO)<<"javascript function call:" <<name<<std::endl;
-    if (name == "HtmlContentHandler") {
+    if (name == "ExecuteTask") {
         CefRefPtr<CefV8Context> context = CefV8Context::GetCurrentContext();
-	CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("HtmlContent");
+	CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("ExecutFinish");
 	CefRefPtr<CefListValue> args = msg->GetArgumentList();
 	args->SetString(0, arguments[0]->GetStringValue());
+	args->SetString(1, arguments[1]->GetStringValue());
+	args->SetString(2, arguments[2]->GetStringValue());
+
+	context->GetFrame()->SendProcessMessage(PID_BROWSER, msg);
+	return true;
+    }else if (name == "EvaluateResult") {
+        CefRefPtr<CefV8Context> context = CefV8Context::GetCurrentContext();
+	CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("EvaluateFinish");
+	CefRefPtr<CefListValue> args = msg->GetArgumentList();
+	args->SetString(0, arguments[0]->GetStringValue());
+	args->SetString(1, arguments[1]->GetStringValue());
+	args->SetString(2, arguments[2]->GetStringValue());
 
 	context->GetFrame()->SendProcessMessage(PID_BROWSER, msg);
 	return true;
@@ -41,6 +53,14 @@ bool JSV8Handler::Execute(const CefString& name,
 	    context->GetFrame()->SendProcessMessage(PID_BROWSER, msg);
 	    return true;
 	}
+    }else if (name == "LLMSummary") {
+        CefRefPtr<CefV8Context> context = CefV8Context::GetCurrentContext();
+	CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Summary");
+	CefRefPtr<CefListValue> args = msg->GetArgumentList();
+	args->SetString(0, arguments[0]->GetStringValue());
+	args->SetString(1, arguments[1]->GetStringValue());
+
+	context->GetFrame()->SendProcessMessage(PID_BROWSER, msg);
     }
     return false;
 }

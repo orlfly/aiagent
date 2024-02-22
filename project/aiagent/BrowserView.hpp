@@ -9,6 +9,7 @@
 // Chromium Embedded Framework
 #include "include/cef_browser.h"
 #include "include/cef_app.h"
+#include "include/cef_server.h"
 #include "BrowserTask.hpp"
 #include "BrowserClient.hpp"
 #include "LoadHandler.hpp"
@@ -85,7 +86,9 @@ public:
 					   CefRefPtr< CefFrame > frame,
 					   CefProcessId source_process,
 					   CefRefPtr< CefProcessMessage > message ) override;
-    void AddTask(std::list<std::shared_ptr<BrowserTask>> task);
+    void Execute(std::string task, CefRefPtr<CefServer> server, int connection_id);
+
+    void OnExecutFinish(std::string msg);
 private:
 
     //! \brief Where to draw on the OpenGL window
@@ -104,11 +107,12 @@ private:
     
     std::string m_extensionCode;
     std::shared_ptr<std::queue<std::shared_ptr<BrowserTask>>> m_taskQue = nullptr;
-    CefRefPtr<OpenAI> m_openai=nullptr;
-
+    CefRefPtr<OpenAI> m_openai = nullptr;
+    CefRefPtr<CefServer> m_ApiServer = nullptr;
+    int m_ConnectionId = -1;
 public:
 
     //! \brief If set to false then the web page is turning.
-   IMPLEMENT_REFCOUNTING(BrowserView);
+    IMPLEMENT_REFCOUNTING(BrowserView);
 };
 #endif // BROWSERVIEW_HPP

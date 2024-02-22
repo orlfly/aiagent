@@ -43,9 +43,9 @@ void LoadHandler::OnLoadingProgressChange( CefRefPtr< CefBrowser > browser, doub
     LOG(INFO)<<"loading m_progress:"<<m_progress<<" progress:"<<progress<<std::endl;
     if( (1.0f-m_progress) > 0.00001f && (1.0f-progress) < 0.00001f)
     {
-        LOG(INFO)<<"Get html content..."<<std::endl; 
-        std::string cmd = "aiagent.visualBox();";
-	browser->GetMainFrame()->ExecuteJavaScript(cmd, browser->GetMainFrame()->GetURL(), 0);
+        LOG(INFO)<<"Get html content..."<<std::endl;
+	CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("ContentLoaded");
+	browser->GetMainFrame()->SendProcessMessage(PID_RENDERER, msg);
     }
     m_progress = progress;
 }
