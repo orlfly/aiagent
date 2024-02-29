@@ -31,6 +31,16 @@ set(AIAGENT_SRCS
   ApiServer.hpp
   openai.hpp
   openai.cpp
+  common.h
+  common.cpp
+  grammar-parser.h
+  grammar-parser.cpp
+  sampling.h
+  sampling.cpp
+  gpt.hpp
+  gpt.cpp
+  faissdb.hpp
+  faissdb.cpp
   util.h
   util.cpp
   json.hpp

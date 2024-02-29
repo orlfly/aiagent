@@ -81,6 +81,7 @@ if(OS_LINUX)
   set(CEF_LIBTYPE SHARED)
   list(APPEND CEF_COMPILER_FLAGS
     -fno-strict-aliasing            # Avoid assumptions regarding non-aliasing of objects of different types
+    -fopenmp
     -fPIC                           # Generate position-independent code for shared libraries
     -fstack-protector               # Protect some vulnerable functions from stack-smashing (security feature)
     -funwind-tables                 # Support stack unwinding for backtrace()
@@ -121,6 +122,7 @@ if(OS_LINUX)
     -D_FORTIFY_SOURCE=2             # Add memory and string function protection (security feature, related to stack-protector)
     )
   list(APPEND CEF_LINKER_FLAGS
+    -fopenmp
     -fPIC                           # Generate position-independent code for shared libraries
     -pthread                        # Use the pthread library
     -Wl,--disable-new-dtags         # Don't generate new-style dynamic tags in ELF
@@ -214,6 +216,10 @@ if(OS_LINUX)
     swscale
     avutil
     x264
+    ctemplate
+    llama
+    faiss
+    openblas
     )
 
   # CEF directory paths.
@@ -248,6 +254,10 @@ if(OS_LINUX)
     locales
     shaders
     script
+    html
+    template
+    models
+    db
     )
 
   if(USE_SANDBOX)

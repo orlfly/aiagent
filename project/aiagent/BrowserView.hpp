@@ -17,6 +17,7 @@
 #include "JSV8Handler.hpp"
 #include "LifeSpanHandler.hpp"
 #include "json.hpp"
+#include "faissdb.hpp"
 #include <string>
 #include <list>
 #include <memory>
@@ -110,6 +111,7 @@ private:
     CefRefPtr<OpenAI> m_openai = nullptr;
     CefRefPtr<CefServer> m_ApiServer = nullptr;
     int m_ConnectionId = -1;
+    FaissDB *m_fdb; 
 public:
 
     //! \brief If set to false then the web page is turning.

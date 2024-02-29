@@ -140,6 +140,7 @@ void BrowserView::OnContextInitialized() {
                                                   url, browserSettings,
                                                   nullptr, nullptr);
     LOG(INFO) << "open browser finish!" << std::endl;
+    m_fdb=FaissDB::GetInstance();
 }
 
 void BrowserView::OnContextCreated(CefRefPtr<CefBrowser> browser,

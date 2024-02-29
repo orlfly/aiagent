@@ -295,6 +295,7 @@ macro(SET_COMMON_TARGET_PROPERTIES target)
   find_package(OpenGL REQUIRED)
   find_package(GLEW REQUIRED)
   find_package(glm REQUIRED)
+  find_package(BLAS REQUIRED)
   target_link_directories(${target} PRIVATE 
 	  "/usr/local/lib")
   set(FFMPEG_HEADERS_DIR /usr/include/ffmpeg)
